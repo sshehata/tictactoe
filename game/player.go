@@ -9,10 +9,10 @@ type player struct {
 	columnContainer          [3]int
 	diagonalContainer        int
 	reverseDiagonalContainer int
-	tile                     tile
+	tile                     Tile
 }
 
-func newPlayer(t tile) *player {
+func newPlayer(t Tile) *player {
 	return &player{
 		tile: t,
 	}
@@ -61,4 +61,8 @@ func (p *player) reset() {
 
 func (p *player) String() string {
 	return fmt.Sprintf("%v", p.tile)
+}
+
+func (p *player) Tile() Tile {
+	return p.tile
 }

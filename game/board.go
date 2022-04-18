@@ -6,18 +6,18 @@ import (
 )
 
 // Board a 3 by 3 tictactoe grid
-type board [3][3]tile
+type Board [3][3]Tile
 
 // NewBoard create a new tictactoe board
-func newBoard() *board {
-	return &board{
+func newBoard() *Board {
+	return &Board{
 		{0, 0, 0},
 		{0, 0, 0},
 		{0, 0, 0},
 	}
 }
 
-func (b *board) play(t tile, position Position) error {
+func (b *Board) play(t Tile, position Position) error {
 	if b[position.X][position.Y] != 0 {
 		return fmt.Errorf(fmt.Sprintf("position %v already filled", position))
 	}
@@ -27,8 +27,8 @@ func (b *board) play(t tile, position Position) error {
 }
 
 // Reset reset the board to start a new game
-func (b *board) reset() {
-	*b = board{
+func (b *Board) reset() {
+	*b = Board{
 		{0, 0, 0},
 		{0, 0, 0},
 		{0, 0, 0},
@@ -36,7 +36,7 @@ func (b *board) reset() {
 }
 
 // Moves get all available moves
-func (b *board) Moves() []Position {
+func (b *Board) Moves() []Position {
 	var moves []Position
 	for i := 0; i < 3; i++ {
 		for j := 0; j < 3; j++ {
@@ -49,7 +49,7 @@ func (b *board) Moves() []Position {
 	return moves
 }
 
-func (b *board) String() string {
+func (b *Board) String() string {
 	var writer strings.Builder
 
 	fmt.Fprintf(&writer, "  _ _ _  \n")

@@ -8,8 +8,8 @@ import (
 
 // Game a game of tictactoe
 type Game struct {
-	Board         *board
-	currentPlayer tile
+	board         *Board
+	currentPlayer Tile
 	moveCount     int
 	gameOver      bool
 	winner        *player
@@ -19,11 +19,11 @@ type Game struct {
 // NewGame Start a new tictactoe game
 func NewGame() *Game {
 	game := Game{
-		Board: newBoard(),
+		board: newBoard(),
 		players: [3]*player{
-			newPlayer(undefined),
-			newPlayer(otile),
-			newPlayer(xtile),
+			newPlayer(Undefined),
+			newPlayer(OTile),
+			newPlayer(XTile),
 		},
 	}
 	game.Reset()
@@ -37,7 +37,7 @@ func (g *Game) Play(x, y int) error {
 	}
 
 	p := g.players[g.currentPlayer]
-	err := g.Board.play(g.players[g.currentPlayer].tile, Position{x, y})
+	err := g.board.play(g.players[g.currentPlayer].tile, Position{x, y})
 	if err != nil {
 		return err
 	}
@@ -53,10 +53,10 @@ func (g *Game) Play(x, y int) error {
 	}
 
 	switch g.currentPlayer {
-	case otile:
-		g.currentPlayer = xtile
-	case xtile:
-		g.currentPlayer = otile
+	case OTile:
+		g.currentPlayer = XTile
+	case XTile:
+		g.currentPlayer = OTile
 	}
 
 	return nil
@@ -65,16 +65,16 @@ func (g *Game) Play(x, y int) error {
 // View print current state of the game
 func (g *Game) String() string {
 	var writer strings.Builder
-	fmt.Fprintf(&writer, "%v\n", g.Board.String())
+	fmt.Fprintf(&writer, "%v\n", g.board.String())
 	fmt.Fprintf(&writer, "____________________")
 	return writer.String()
 }
 
 // Reset start a new game
 func (g *Game) Reset() {
-	g.Board.reset()
+	g.board.reset()
 	g.gameOver = false
-	g.currentPlayer = otile
+	g.currentPlayer = OTile
 	g.winner = g.players[0]
 
 	for _, p := range g.players {
@@ -88,11 +88,21 @@ func (g *Game) GameOver() bool {
 }
 
 // CurrentPlayer get the player playing this turn
-func (g *Game) CurrentPlayer() tile {
+func (g *Game) CurrentPlayer() Tile {
 	return g.currentPlayer
 }
 
 // Winner get winner
 func (g *Game) Winner() *player {
 	return g.winner
+}
+
+// Board return the current game board state
+func (g *Game) Board() *Board {
+	return g.board
+}
+
+// IsDraw return true if the game is draw
+func (g *Game) IsDraw() bool {
+	return g.gameOver && g.winner == g.players[0]
 }
