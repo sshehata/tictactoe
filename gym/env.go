@@ -1,6 +1,7 @@
 package gym
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -37,7 +38,7 @@ func NewEnv(base string) (*Env, error) {
 	}, nil
 }
 
-func (e *Env) getURL(path string) *url.URL {
+func (e *Env) resolve(path string) *url.URL {
 	u, err := url.Parse(fmt.Sprintf("%v/%v", e.sessionID, path))
 	if err != nil {
 		panic(fmt.Sprintf("bad urls: %v", err.Error()))
@@ -61,9 +62,9 @@ func parseBody(resp *http.Response) map[string]interface{} {
 	return body
 }
 
-// GameOver Returns true if the game is over
-func (e *Env) GameOver() bool {
-	u := e.getURL("gameover")
+// Done Returns true if the game is over
+func (e *Env) Done() bool {
+	u := e.resolve("gameover")
 
 	resp, err := http.Get(u.String())
 	if err != nil {
@@ -76,7 +77,7 @@ func (e *Env) GameOver() bool {
 
 // Observation Returns current board state
 func (e *Env) Observation() Board {
-	u := e.getURL("")
+	u := e.resolve("")
 
 	resp, err := http.Get(u.String())
 	if err != nil {
@@ -98,9 +99,9 @@ func (e *Env) Observation() Board {
 	return body["board"]
 }
 
-// Moves Returns possible moves according to current state
-func (e *Env) Moves() []game.Position {
-	u := e.getURL("moves")
+// ActionSpace Returns possible moves according to current state
+func (e *Env) ActionSpace() []game.Position {
+	u := e.resolve("moves")
 
 	resp, err := http.Get(u.String())
 	if err != nil {
@@ -119,4 +120,66 @@ func (e *Env) Moves() []game.Position {
 	}
 
 	return body["moves"]
+}
+
+// Step perform the chosen action at the current step
+func (e *Env) Step(action game.Position) (Board, bool) {
+	u := e.resolve("")
+
+	data, _ := json.Marshal(action)
+	resp, err := http.Post(u.String(), "application/json", bytes.NewBuffer(data))
+
+	if err != nil {
+		panic(fmt.Sprintf("failed to contact game server: %v", err.Error()))
+	}
+
+	var body map[string]interface{}
+	err = json.NewDecoder(resp.Body).Decode(&body)
+	if err != nil {
+		panic(fmt.Sprintf("could not parse response: %v", err.Error()))
+	}
+
+	return *MakeBoard(body["board"].([]interface{})), body["status"].(bool)
+}
+
+// Reward get the reward for the particular player
+func (e *Env) Reward(t game.Tile) float64 {
+	u := e.resolve("winner")
+	resp, err := http.Get(u.String())
+
+	if err != nil {
+		panic(fmt.Sprintf("failed to contact game server: %v", err.Error()))
+	}
+
+	var body map[string]game.Tile
+	err = json.NewDecoder(resp.Body).Decode(&body)
+	if err != nil {
+		panic(fmt.Sprintf("could not parse response: %v", err.Error()))
+	}
+
+	if body["winner"] == game.Undefined {
+		return 0.1
+	} else if body["winner"] == t {
+		return 1
+	} else {
+		return 0
+	}
+}
+
+// Reset reset the game
+func (e *Env) Reset() Board {
+	u := e.resolve("reset")
+	resp, err := http.Post(u.String(), "application/json", nil)
+
+	if err != nil {
+		panic(fmt.Sprintf("failed to contact game server: %v", err.Error()))
+	}
+
+	var body map[string]interface{}
+	err = json.NewDecoder(resp.Body).Decode(&body)
+	if err != nil {
+		panic(fmt.Sprintf("could not parse response: %v", err.Error()))
+	}
+
+	return *MakeBoard(body["board"].([]interface{}))
 }

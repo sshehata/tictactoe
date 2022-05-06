@@ -2,7 +2,6 @@ package api
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 
@@ -57,9 +56,10 @@ func reset(c *gin.Context) {
 
 	c.JSON(200, gin.H{
 		"board":  g.Board(),
-		"player": g.CurrentPlayer().String(),
+		"player": g.CurrentPlayer(),
 		"status": g.GameOver(),
-		"winner": g.Winner().String()})
+		"winner": g.Winner().Tile(),
+	})
 }
 
 func moves(c *gin.Context) {
@@ -77,25 +77,8 @@ func gameOver(c *gin.Context) {
 	})
 }
 
-func reward(c *gin.Context) {
+func winner(c *gin.Context) {
 	g := c.MustGet("game").(*game.Game)
-	t, err := strconv.Atoi(c.Param("tile"))
-	if err != nil {
-		c.JSON(400, gin.H{
-			"message": "Invalid tile",
-			"tile":    t,
-		})
-		return
-	}
-
-	tile, err := game.NewTile(t)
-	if err != nil {
-		c.JSON(400, gin.H{
-			"message": "Invalid tile",
-			"tile":    t,
-		})
-		return
-	}
 
 	if !g.GameOver() {
 		c.JSON(400, gin.H{
@@ -106,15 +89,11 @@ func reward(c *gin.Context) {
 
 	if g.IsDraw() {
 		c.JSON(200, gin.H{
-			"reward": 0.1,
-		})
-	} else if g.Winner().Tile() == tile {
-		c.JSON(200, gin.H{
-			"reward": 1,
+			"winner": game.Undefined,
 		})
 	} else {
 		c.JSON(200, gin.H{
-			"reward": 0,
+			"winner": g.Winner().Tile(),
 		})
 	}
 }
@@ -134,7 +113,7 @@ func Listen() {
 	r.Use(sessionID)
 	{
 		r.GET("/:sessionID/moves/", moves)
-		r.GET("/:sessionID/reward/:tile", reward)
+		r.GET("/:sessionID/winner", winner)
 		r.GET("/:sessionID/gameover", gameOver)
 		r.GET("/:sessionID/", state)
 		r.POST("/:sessionID/", play)

@@ -76,6 +76,7 @@ func (g *Game) Reset() {
 	g.gameOver = false
 	g.currentPlayer = OTile
 	g.winner = g.players[0]
+	g.moveCount = 0
 
 	for _, p := range g.players {
 		p.reset()
