@@ -63,7 +63,7 @@ func main() {
 		if i%1000 == 0 {
 			fmt.Printf("epoch %d: persisting policies\n", i/1000)
 			for _, p := range players {
-				err = p.Persist(p.Name() + ".txt")
+				err = p.Persist(p.Name() + ".bin")
 				if err != nil {
 					fmt.Printf("could not persist player %s: %s\n", p.Name(), err)
 				}
