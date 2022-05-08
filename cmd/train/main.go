@@ -22,8 +22,8 @@ func chooseStartingPlayer() int {
 }
 
 func main() {
-	playerA := player.NewPlayer("player a", 0.3)
-	playerB := player.NewPlayer("player b", 0.3)
+	playerA := player.NewPlayer("playera", 0.3)
+	playerB := player.NewPlayer("playerb", 0.3)
 	players := []*player.Player{playerA, playerB}
 	scores := []float64{0, 0}
 
@@ -60,7 +60,15 @@ func main() {
 			scores[i] += reward
 		}
 
-		fmt.Println(obs)
+		if i%1000 == 0 {
+			fmt.Printf("epoch %d: persisting policies\n", i/1000)
+			for _, p := range players {
+				err = p.Persist(p.Name() + ".txt")
+				if err != nil {
+					fmt.Printf("could not persist player %s: %s\n", p.Name(), err)
+				}
+			}
+		}
 
 		obs = env.Reset()
 	}

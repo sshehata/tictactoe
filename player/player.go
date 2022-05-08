@@ -1,8 +1,10 @@
 package player
 
 import (
+	"encoding/gob"
 	"math"
 	"math/rand"
+	"os"
 	"tictactoe/game"
 	"tictactoe/gym"
 )
@@ -72,7 +74,25 @@ func (p *Player) Tile() game.Tile {
 	return p.symbol
 }
 
+// Name get player name
+func (p *Player) Name() string {
+	return p.name
+}
+
 // AddState add state to list of states player observes
 func (p *Player) AddState(b gym.Board) {
 	p.states = append(p.states, b)
+}
+
+// Persist write the player policy to path
+func (p *Player) Persist(path string) error {
+	file, err := os.Create(path)
+	defer file.Close()
+
+	if err == nil {
+		encoder := gob.NewEncoder(file)
+		encoder.Encode(p.statesValue)
+	}
+
+	return err
 }
